@@ -1,0 +1,287 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Пользователи
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Связи
+  notebooks Notebook[]
+  sharedNotebooks SharedNotebook[]
+
+  @@map("users")
+}
+
+// Блокноты
+model Notebook {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  color       String?  @default("#6366f1")
+  icon        String?
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Связи
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pages       Page[]
+  tags        NotebookTag[]
+  sharedWith  SharedNotebook[]
+
+  @@map("notebooks")
+}
+
+// Страницы
+model Page {
+  id          String   @id @default(cuid())
+  title       String
+  content     Json?    // JSON для хранения содержимого страницы
+  pageNumber  Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Связи
+  notebookId  String
+  notebook    Notebook @relation(fields: [notebookId], references: [id], onDelete: Cascade)
+  
+  // Медиа контент
+  strokes     Stroke[]
+  textBlocks  TextBlock[]
+  images      Image[]
+  audioSpans  AudioSpan[]
+  pdfAttachments PdfAttachment[]
+  annotations Annotation[]
+
+  @@map("pages")
+}
+
+// Штрихи (рукописный ввод)
+model Stroke {
+  id        String   @id @default(cuid())
+  points    Json     // Массив точек с координатами, давлением, наклоном
+  color     String   @default("#000000")
+  width     Float    @default(1.0)
+  opacity   Float    @default(1.0)
+  tool      String   @default("pen") // pen, highlighter, eraser
+  layer     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  // Связи
+  pageId    String
+  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@map("strokes")
+}
+
+// Текстовые блоки
+model TextBlock {
+  id        String   @id @default(cuid())
+  content   String
+  x         Float
+  y         Float
+  width     Float
+  height    Float
+  fontSize  Float    @default(16)
+  fontFamily String  @default("Arial")
+  color     String   @default("#000000")
+  isOcr     Boolean  @default(false) // Распознанный текст
+  createdAt DateTime @default(now())
+
+  // Связи
+  pageId    String
+  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@map("text_blocks")
+}
+
+// Изображения
+model Image {
+  id        String   @id @default(cuid())
+  url       String
+  x         Float
+  y         Float
+  width     Float
+  height    Float
+  createdAt DateTime @default(now())
+
+  // Связи
+  pageId    String
+  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@map("images")
+}
+
+// Аудио сегменты
+model AudioSpan {
+  id        String   @id @default(cuid())
+  url       String
+  startTime Float
+  endTime   Float
+  x         Float
+  y         Float
+  createdAt DateTime @default(now())
+
+  // Связи
+  pageId    String
+  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@map("audio_spans")
+}
+
+// PDF вложения
+model PdfAttachment {
+  id        String   @id @default(cuid())
+  url       String
+  pageNumber Int
+  x         Float
+  y         Float
+  width     Float
+  height    Float
+  createdAt DateTime @default(now())
+
+  // Связи
+  pageId    String
+  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@map("pdf_attachments")
+}
+
+// Аннотации PDF
+model Annotation {
+  id        String   @id @default(cuid())
+  type      String   // highlight, underline, note, arrow, rectangle, circle
+  content   String?  // Текст аннотации
+  x         Float
+  y         Float
+  width     Float
+  height    Float
+  color     String   @default("#ffff00")
+  opacity   Float    @default(0.5)
+  pageNumber Int     // Номер страницы PDF
+  createdAt DateTime @default(now())
+
+  // Связи
+  pageId    String
+  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@map("annotations")
+}
+
+// Теги
+model Tag {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  color     String   @default("#6366f1")
+  createdAt DateTime @default(now())
+
+  // Связи
+  notebooks NotebookTag[]
+
+  @@map("tags")
+}
+
+// Связь блокнотов и тегов
+model NotebookTag {
+  notebookId String
+  tagId      String
+
+  notebook   Notebook @relation(fields: [notebookId], references: [id], onDelete: Cascade)
+  tag        Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([notebookId, tagId])
+  @@map("notebook_tags")
+}
+
+// Шаблоны
+model Template {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  content     Json     // JSON структура шаблона
+  category    String   // cornell, planner, grid, dots, custom
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@map("templates")
+}
+
+// Флэшкарты
+model Flashcard {
+  id        String   @id @default(cuid())
+  front     String
+  back      String
+  deck      String?  // Название колоды
+  tags      String[] // Массив тегов
+  createdAt DateTime @default(now())
+
+  // Связи
+  pageId    String?
+  page      Page?    @relation(fields: [pageId], references: [id], onDelete: SetNull)
+
+  @@map("flashcards")
+}
+
+// Тестовые вопросы
+model TestItem {
+  id          String   @id @default(cuid())
+  question    String
+  options     Json?    // Массив вариантов ответов
+  correctAnswer String
+  explanation String?
+  type        String   // multiple_choice, true_false, short_answer
+  difficulty  String   @default("medium") // easy, medium, hard
+  createdAt   DateTime @default(now())
+
+  // Связи
+  pageId      String?
+  page        Page?    @relation(fields: [pageId], references: [id], onDelete: SetNull)
+
+  @@map("test_items")
+}
+
+// Общий доступ к блокнотам
+model SharedNotebook {
+  id        String   @id @default(cuid())
+  role      String   @default("viewer") // viewer, editor, admin
+  createdAt DateTime @default(now())
+
+  // Связи
+  notebookId String
+  userId     String
+  notebook   Notebook @relation(fields: [notebookId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([notebookId, userId])
+  @@map("shared_notebooks")
+}
+
+// AI Summary
+model AiSummary {
+  id        String   @id @default(cuid())
+  content   String
+  summary   String
+  type      String   @default("summary") // summary, flashcards, test
+  createdAt DateTime @default(now())
+
+  // Связи
+  pageId    String
+  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@map("ai_summaries")
+}
