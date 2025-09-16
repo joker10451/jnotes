@@ -1,39 +1,24 @@
 {
-  "name": "jnotes-clone",
+  "name": "@jnotes/ink-engine",
   "version": "0.1.0",
-  "description": "Бесплатный аналог Jnotes с паритетом функций",
-  "private": true,
-  "workspaces": [
-    "apps/*",
-    "services/*",
-    "packages/*"
-  ],
+  "description": "WASM ядро для обработки штрихов с поддержкой стилуса",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "build": "turbo run build",
-    "dev": "turbo run dev",
-    "lint": "turbo run lint",
-    "test": "turbo run test",
-    "clean": "turbo run clean",
-    "type-check": "turbo run type-check",
-    "db:generate": "turbo run db:generate",
-    "db:push": "turbo run db:push",
-    "db:migrate": "turbo run db:migrate",
-    "docker:up": "docker-compose up -d",
-    "docker:down": "docker-compose down",
-    "docker:logs": "docker-compose logs -f"
+    "build": "tsc && wasm-pack build --target web --out-dir pkg",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist pkg"
+  },
+  "dependencies": {
+    "wasm-bindgen": "^0.2.87"
   },
   "devDependencies": {
-    "@turbo/gen": "^1.10.12",
-    "turbo": "^1.10.12",
+    "@types/wasm-bindgen": "^0.2.0",
     "typescript": "^5.2.2",
-    "@types/node": "^20.8.0",
-    "eslint": "^8.50.0",
-    "prettier": "^3.0.3"
+    "wasm-pack": "^0.12.1"
   },
-  "packageManager": "pnpm@8.10.0",
-  "engines": {
-    "node": ">=18.0.0",
-    "pnpm": ">=8.0.0"
-  }
+  "files": [
+    "dist",
+    "pkg"
+  ]
 }
-

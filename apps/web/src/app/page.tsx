@@ -1,103 +1,106 @@
-import Image from "next/image";
+'use client';
+
+import React, { useState } from 'react';
+import { Box, Container, Typography, AppBar, Toolbar, IconButton, Button } from '@mui/material';
+import { Menu as MenuIcon, Add as AddIcon, Search as SearchIcon } from '@mui/icons-material';
+import { InkCanvas } from '@/components/Canvas/InkCanvas';
+import { InkToolbar } from '@/components/Toolbar/InkToolbar';
+import { BrushSettings, CanvasSettings } from '@jnotes/ink-engine';
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [brushSettings, setBrushSettings] = useState<BrushSettings>({
+    color: '#000000',
+    width: 2,
+    opacity: 1,
+    tool: 'pen',
+    smoothing: true,
+    pressureSensitivity: true,
+    tiltSensitivity: false,
+  });
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+  const [canvasSettings, setCanvasSettings] = useState<CanvasSettings>({
+    width: 800,
+    height: 600,
+    backgroundColor: '#ffffff',
+    gridSize: 20,
+    gridColor: '#e0e0e0',
+    showGrid: false,
+  });
+
+  const [showGrid, setShowGrid] = useState(false);
+
+  const handleStrokeComplete = (stroke: any) => {
+    console.log('Stroke completed:', stroke);
+  };
+
+  const handleUndo = () => {
+    console.log('Undo');
+  };
+
+  const handleRedo = () => {
+    console.log('Redo');
+  };
+
+  const handleClear = () => {
+    console.log('Clear');
+  };
+
+  const handleToggleGrid = () => {
+    setShowGrid(!showGrid);
+    setCanvasSettings(prev => ({
+      ...prev,
+      showGrid: !showGrid
+    }));
+  };
+
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+      {/* App Bar */}
+      <AppBar position="static" elevation={1}>
+        <Toolbar>
+          <IconButton edge="start" color="inherit" aria-label="menu">
+            <MenuIcon />
+          </IconButton>
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+            JNotes
+          </Typography>
+          <IconButton color="inherit">
+            <SearchIcon />
+          </IconButton>
+          <Button color="inherit" startIcon={<AddIcon />}>
+            Новая страница
+          </Button>
+        </Toolbar>
+      </AppBar>
+
+      {/* Main Content */}
+      <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+        {/* Toolbar */}
+        <Box sx={{ p: 2, borderRight: 1, borderColor: 'divider' }}>
+          <InkToolbar
+            brushSettings={brushSettings}
+            onBrushSettingsChange={setBrushSettings}
+            onUndo={handleUndo}
+            onRedo={handleRedo}
+            onClear={handleClear}
+            onToggleGrid={handleToggleGrid}
+            canUndo={false}
+            canRedo={false}
+            showGrid={showGrid}
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
+        </Box>
+
+        {/* Canvas Area */}
+        <Box sx={{ flex: 1, p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <InkCanvas
+            width={canvasSettings.width}
+            height={canvasSettings.height}
+            brushSettings={brushSettings}
+            canvasSettings={canvasSettings}
+            onStrokeComplete={handleStrokeComplete}
           />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+        </Box>
+      </Box>
+    </Box>
   );
 }
